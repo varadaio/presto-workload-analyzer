@@ -1,0 +1,711 @@
+<!--Copyright (c) 2019-2021 Varada, Inc.-->
+<!--This file is part of Presto Workload Analyzer.-->
+
+<!--Presto Workload Analyzer is free software: you can redistribute it and/or modify-->
+<!--it under the terms of the GNU General Public License as published by-->
+<!--the Free Software Foundation, either version 3 of the License, or-->
+<!--(at your option) any later version.-->
+
+<!--Presto Workload Analyzer is distributed in the hope that it will be useful,-->
+<!--but WITHOUT ANY WARRANTY; without even the implied warranty of-->
+<!--MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the-->
+<!--GNU General Public License for more details.-->
+
+<!--You should have received a copy of the GNU General Public License-->
+<!--along with Presto Workload Analyzer.  If not, see <https://www.gnu.org/licenses/>.-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>VARADA Workload Analysis Report</title>
+    <script type="text/javascript" src="https://cdn.bokeh.org/bokeh/release/bokeh-2.0.1.min.js"
+            integrity="sha384-JpP8FXbgAZLkfur7LiK3j9AGBhHNIvF742meBJrjO2ShJDhCG2I1uVvW+0DUtrmc"
+            crossorigin="anonymous"></script>
+
+    <!-- PLACEHOLDER_FOR_BOKEH_JSONS -->
+
+    <script type="text/javascript">
+
+
+        function renderChart(parent, elementId) {
+            const docs_json = document.getElementById(elementId).textContent;
+            const docs = JSON.parse(docs_json);
+            const docId = Object.entries(docs)[0][0];
+            const rootId = Object.entries(docs)[0][1].roots.root_ids[0];
+
+            const container = document.createElement("div");
+            const containerId = elementId + "--box";
+            container.id = containerId;
+            container.className = "bk-root";
+
+            parent.appendChild(container);
+
+            // var render_items = [{"docid":"ee342648-61a4-4a2d-b2d0-40786978bc7f","root_ids":["1001"],"roots":{"1001":"graph-a-box"}}];
+            var render_items = [{"docid": docId, "root_ids": [rootId], "roots": {[rootId]: containerId}}];
+            window.Bokeh.embed.embed_items(docs_json, render_items);
+        }
+
+        function renderTOCItem(i) {
+            const element = document.createElement("a");
+            element.href = "#item--" + i.id;
+            element.innerText = i.title;
+
+            const li = document.createElement("li");
+            li.appendChild(element);
+            document.getElementById("toc").appendChild(li);
+        }
+
+        function renderTOCItemRecursive(index) {
+            const flexBasis = `${index / (structure.charts.length - 1) * 100}%`;
+            console.log(flexBasis);
+            document.getElementById("progress-bar-progress").style.flexBasis = flexBasis;
+            const item = structure.charts[index];
+            const li = document.createElement("li");
+            li.id = "item--" + item.id;
+            const h2 = document.createElement("div");
+            h2.className = "h2";
+            h2.innerText = item.title;
+            li.appendChild(h2);
+            renderChart(li, item.id);
+            const desc = document.createElement("p");
+            desc.innerText = item.description;
+            li.appendChild(desc)
+            document.getElementById("charts").appendChild(li);
+            renderTOCItem(item);
+            if (index === structure.charts.length - 1) {
+                document.getElementById("content").style.display = "flex";
+                document.getElementById("progress-bar-container").style.display = "none";
+            } else {
+                requestAnimationFrame(() => renderTOCItemRecursive(index + 1));
+            }
+
+        }
+
+        function render() {
+            /*
+            Exclude graphs from mobile version, converted from 1 base to zero base:
+             */
+            const excludedChartIds = [17, 18, 19, 20, 21, 22, 23].map(i => i - 1);
+            if (window.screen.width < 1024) {
+                structure.charts = structure.charts.filter((i, index) => {
+                    return !excludedChartIds.includes(index);
+                })
+            }
+
+            renderTOCItemRecursive(0);
+            document.getElementById("metrics_days").innerText = structure.metrics.days
+            document.getElementById("metrics_queries").innerText = structure.metrics.queries
+            let inputTB;
+            if (structure.metrics.input_TB < 1) {
+                inputTB = parseFloat(structure.metrics.input_TB).toFixed(3);
+            } else {
+                inputTB = Math.round(structure.metrics.input_TB * 10) / 10;
+            }
+            document.getElementById("metrics_input_TB").innerText = inputTB;
+        }
+
+        if (document.readyState !== "loading") render("graph");
+        else document.addEventListener("DOMContentLoaded", render);
+    </script>
+
+
+</head>
+<body>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+</style>
+
+<style>
+    body {
+
+        font-family: Montserrat, sans-serif;
+        margin: 0;
+    }
+
+    .top-bar {
+        background-color: #832CFF;
+        color: white;
+        font-size: 20px;
+        padding: 0 5px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+    }
+
+    #logo-svg {
+        height: 60px;
+    }
+
+    .header-link {
+        flex: 1;
+        text-align: center;
+    }
+
+    .header-link a {
+        color: white;
+    }
+
+    h1 {
+        font-weight: bold;
+        font-size: 45px;
+        line-height: 60px;
+        margin-top: 10px;
+    }
+
+    p {
+        font-size: 20px;
+        font-weight: normal;
+        line-height: 2;
+    }
+
+    .h2 {
+        margin-bottom: 20px;
+        margin-top: 20px;
+    }
+
+    .sections li {
+        font-size: 20px;
+        font-weight: bold;
+        margin-top: 40px;
+    }
+
+    #charts {
+        margin-top: 30px;
+    }
+
+    .sections #charts li {
+        margin-top: 80px;
+        font-weight: bold;
+        font-size: 28px;
+    }
+
+
+    .sections .metrics li {
+        margin-top: 0;
+    }
+
+    a {
+        color: black;
+    }
+
+    .bk-root {
+        display: block;
+
+    }
+
+    #toc {
+        font-size: 14px;
+        line-height: 2;
+        width: 294px;
+    }
+
+    .scrolling-body {
+        overflow-y: scroll;
+        overflow-x: hidden;
+        padding: 0 20px;
+        height: 100%;
+    }
+
+    .insight-overview {
+        display: flex;
+        margin: 30px 0 30px 60px;
+
+    }
+
+    .insight-overview .icon {
+        flex: 0 0 100px;
+        padding: 15px;
+        box-sizing: border-box;
+        margin-right: 30px;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .insight-overview .text .title {
+        font-weight: bold;
+    }
+
+    .insight-overview .text {
+        padding: 10px 15px;
+        background-color: #ddd;
+        flex: 0 1 700px;
+        line-height: 1.4;
+    }
+
+    ul {
+        list-style-type: none;
+        padding: 0;
+    }
+
+    .bigger {
+        font-size: 30px;
+        font-weight: bold;
+        display: inline-block;
+        padding: 0 6px;
+    }
+
+    .metrics li {
+        font-weight: normal;
+        font-size: 20px;
+        line-height: 2;
+    }
+
+
+    .cluster-overview li {
+        margin-top: 0;
+    }
+
+    #content {
+        display: flex;
+        flex-direction: row;
+        transform: translateX(-356px);
+        transition-duration: 0.5s;
+        width: calc(100vw + 356px);
+        overflow: hidden;
+        flex: 1;
+    }
+
+    #content.open {
+        transform: translateX(0);
+        transition-duration: 0.5s;
+        width: calc(100vw);
+    }
+
+    #toggle-button {
+
+        padding: 5px 4px 3px 5px;
+        cursor: pointer;
+        background-color: #f5f5f5;
+        text-align: center;
+        border-radius: 20px;
+        display: inline-block;
+
+
+    }
+
+    #toggle-button svg {
+        transform: rotate(180deg);
+        transition-duration: 0.5s;
+    }
+
+    #content.open #toggle-button svg {
+        transform: rotate(0);
+        transition-duration: 0.5s;
+    }
+
+    .inline-menu {
+        flex: 0 0 400px;
+        overflow-y: auto;
+        padding: 0 20px;
+    }
+
+    .inline-menu h3 {
+        margin: 0;
+    }
+
+    .logo-svg {
+        height: 60px;
+    }
+
+    .sections {
+        max-width: 1000px;
+    }
+
+    #scrolling-body {
+        width: 100%;
+        padding-left: 30px;
+        box-sizing: border-box;
+        padding-bottom: 100px;
+    }
+
+    @media screen and (max-height: 1200px) {
+        #charts {
+            max-width: 700px;
+        }
+    }
+    @media screen and (max-width: 1000px) {
+        .top-bar {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        #logo-svg {
+            height: 40px;
+        }
+
+        .header-link {
+            font-size: 15px;
+            padding: 0 0 10px 7px;
+            align-self: flex-start;
+        }
+
+        #content {
+            padding-left: 0;
+            top: 30px;
+        }
+
+        .inline-menu {
+            display: none !important;
+        }
+
+        .charts {
+            list-style-position: inside;
+            padding: 0;
+        }
+
+        .h2 {
+            display: inline;
+        }
+
+        .cluster-overview {
+            padding: 0;
+        }
+
+        .insight-overview {
+            margin-left: 0;
+        }
+
+        .sections {
+            padding-left: 0;
+        }
+
+        .logo-svg {
+            height: 30px;
+        }
+
+        h1 {
+            font-size: 20px;
+            line-height: 1.5;
+        }
+
+        #scrolling-body {
+            padding: 20px;
+        }
+
+        p {
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .insight-overview {
+            margin-left: 0;
+        }
+
+        .insight-overview .text {
+            padding: 10px;
+            flex: 1;
+            font-size: 15px;
+        }
+
+        .insight-overview .icon {
+            flex: 0 0 60px;
+            height: 60px;
+            padding: 10px;
+            margin-right: 10px;
+        }
+
+        .sections li {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .sections #charts li {
+            margin-top: 30px;
+            font-size: 25px;
+        }
+
+        .bigger {
+            font-size: 25px;
+        }
+
+        #charts {
+            margin-left: 0;
+            max-width: unset;
+        }
+    }
+
+    #progress-bar-container {
+        height: 80vh;
+        width: 100vw;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    #progress-bar-caption {
+        padding: 40px;
+        font-size: 30px;
+    }
+
+    #progress-bar {
+        width: 40%;
+        border: 2px solid black;
+        height: 50px;
+        display: flex;
+        flex-direction: row;
+    }
+
+    #progress-bar-progress {
+        flex: 0 0 33%;
+        background-color: #832CFF;
+        height: 50px;
+    }
+
+    .copy-alert-box {
+        display: none;
+        position: fixed;
+        left: calc(50vw - 250px);
+        top: 10px;
+        width: 500px;
+        height: 60px;
+        box-shadow: none;
+        opacity: 0;
+        transition-duration: 0.2s;
+        z-index: 10;
+        align-items: center;
+        justify-content: center;
+        background-color: #fff;
+    }
+    .copy-alert-box.active {
+        display: flex;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+        transition-duration: 0.2s;
+        opacity: 1;
+    }
+
+</style>
+<script>
+    let panelOpen = true;
+
+    function togglePanel() {
+        if (panelOpen) {
+            panelOpen = false;
+            document.getElementById("content").classList.remove("open");
+        } else {
+            panelOpen = true;
+            document.getElementById("content").classList.add("open");
+        }
+    }
+
+    function copyToClipboard(text) {
+        const element = document.getElementById("copy-alert-box");
+        element.innerHTML = text + " copied to clipboard"
+        element.classList.add("active");
+        setTimeout(() => element.classList.remove("active"), 3000);
+        const input = document.createElement('textarea');
+        input.innerHTML = text;
+        document.body.appendChild(input);
+        input.select();
+        const result = document.execCommand('copy');
+        document.body.removeChild(input);
+        return result;
+    }
+
+</script>
+<div class="copy-alert-box" id="copy-alert-box">
+    Query Id copied to clipboard
+</div>
+<div style="display: flex; flex-direction: column; height: 100vh; overflow: hidden;">
+
+    <div class="top-bar">
+        <a href="https://varada.io" target="_blank">
+            <svg id="logo-svg" viewBox="0 0 687 223" version="1.1" xmlns="http://www.w3.org/2000/svg"
+                 xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/"
+                 style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;display: block;">
+                <path d="M481.1,63c20.9,0.6 38.4,12.8 46,32.3c8.8,22.3 -0.6,48.8 -21.6,60.8c-7.9,4.5 -16.4,6.8 -25.5,6.8l-29.2,0l0,-54.8l17,0l0,37.4l13.3,0c19.1,-0.3 33.9,-17.1 31.7,-36c-2,-16.5 -15.1,-28.7 -31.8,-29c-5.739,-0.179 -24.745,-0.118 -29.26,-0.103c-0.52,0.002 -0.847,0.003 -0.94,0.003l0,-17.4l30.3,0Zm-244.226,76.318l0.001,0.004l0.001,0.001c2.811,7.019 5.625,14.041 8.424,21.077c0.2,0.6 0.6,1.6 1,2.3l-18.9,0c-0.5,0 -1,-0.3 -1.2,-0.8l-0.3,-0.9c-3.177,-7.849 -6.315,-15.698 -9.462,-23.571l-0.007,-0.017l-0.007,-0.016l-0.005,-0.014l-0.004,-0.009l-0.005,-0.012l-0.002,-0.006c-1.896,-4.741 -3.795,-9.491 -5.708,-14.255c-3.9,-9.65 -7.775,-19.325 -11.65,-29l0,-0.001c-3.875,-9.675 -7.75,-19.35 -11.65,-28.999c-0.2,-0.6 -0.4,-1.2 -0.7,-2l18.1,0c0.7,0 1.5,0.3 1.9,1c0.05,0.1 0.1,0.175 0.15,0.249l0,0.001c0.05,0.075 0.1,0.15 0.15,0.25c2.6,6.4 5.175,12.85 7.75,19.3l0.003,0.006c2.574,6.448 5.148,12.896 7.747,19.294c4.735,12.057 9.549,24.075 14.368,36.103l0,0.002l0.001,0.002l0.001,0.001l0.001,0.002l0,0.002l0.003,0.006Zm-77.358,-8.909c6.035,-15.116 12.076,-30.245 18.084,-45.409c0.3,0.7 6.6,15.9 9.6,23.2c0.3,0.8 0.3,1.9 0,2.6c-4.021,10.02 -8.041,20.149 -12.061,30.277c-2.68,6.752 -5.36,13.503 -8.039,20.223c-0.5,0.9 -1.3,1.5 -2.3,1.5l-18.2,0c4.292,-10.795 8.603,-21.589 12.916,-32.391Zm188.718,-0.046l-0.017,0.043c-4.313,10.803 -8.624,21.598 -12.917,32.394l18.2,0c1,0 1.8,-0.6 2.3,-1.5c2.68,-6.719 5.359,-13.471 8.039,-20.222l0.002,-0.005c4.02,-10.127 8.039,-20.254 12.059,-30.273c0.3,-0.7 0.3,-1.8 0,-2.6c-0.626,-1.522 -1.39,-3.387 -2.212,-5.393l-0.015,-0.036c-3.119,-7.609 -7.057,-17.218 -7.373,-17.771c-5.997,15.137 -12.027,30.24 -18.052,45.33l-0.008,0.018l-0.006,0.015Zm47.216,-66.013c0.05,0.075 0.1,0.15 0.15,0.25c1.75,4.341 6.74,16.795 12.606,31.434l0.001,0.001l0.015,0.037c11.56,28.85 26.513,66.163 26.778,66.628l-18.9,0c-0.5,0 -1,-0.3 -1.2,-0.8l-0.3,-0.6c-3.639,-9.244 -7.385,-18.541 -11.12,-27.813l-0.001,-0.001l0,-0.002c-1.397,-3.467 -2.792,-6.929 -4.179,-10.384c-3.9,-9.65 -7.775,-19.325 -11.65,-29l0,-0.001l-0.001,0c-3.874,-9.675 -7.749,-19.35 -11.649,-28.999l-0.001,-0.002c-0.2,-0.6 -0.399,-1.199 -0.699,-1.998l18.1,0c0.7,0 1.5,0.3 1.9,1c0.05,0.1 0.1,0.175 0.15,0.25Zm153.037,67.167l-0.025,0.062l-0.003,0.007l-0.006,0.015c-4.118,10.322 -8.236,20.645 -12.353,30.999l18.2,0c1,0 1.8,-0.6 2.3,-1.5c3.35,-8.4 6.675,-16.775 10,-25.15l0.001,-0.003c3.324,-8.374 6.649,-16.748 9.999,-25.147c0.3,-0.7 0.3,-1.8 0,-2.6c-3,-7.3 -9.3,-22.5 -9.6,-23.2c-6.171,15.577 -12.342,31.047 -18.513,46.517Zm77.785,7.798l0.015,0.038l0.016,0.038l0.03,0.076c2.793,6.97 5.587,13.945 8.367,20.933c0.2,0.6 0.5,1.4 0.9,2l-18.9,0c-0.5,0 -1,-0.3 -1.2,-0.8l-0.3,-0.6c-5.1,-12.6 -10.1,-25.2 -15.1,-37.9c-3.9,-9.65 -7.775,-19.325 -11.65,-29l0,-0.001c-3.875,-9.675 -7.75,-19.35 -11.65,-28.999c-0.237,-0.475 -0.412,-0.949 -0.623,-1.522l0,-0.002l-0.005,-0.014c-0.055,-0.147 -0.111,-0.3 -0.172,-0.462l18.2,0c0.7,0 1.5,0.3 1.9,1c0.05,0.1 0.1,0.175 0.15,0.25c0.05,0.075 0.1,0.15 0.15,0.25c2.6,6.4 5.175,12.85 7.75,19.3c2.575,6.45 5.15,12.9 7.75,19.3c4.734,12.055 9.547,24.07 14.365,36.096l0.007,0.019Zm-487.232,-45.099l0.001,-0.001c4.119,-10.328 8.239,-20.655 12.359,-31.015l-18.2,0c-1,0 -1.8,0.6 -2.3,1.5c-3.35,8.401 -6.675,16.776 -10.001,25.152c-3.324,8.374 -6.649,16.749 -9.999,25.148c-0.2,0.7 -0.2,1.8 0,2.6c2.9,7.3 9.2,22.5 9.6,23.2c6.18,-15.599 12.359,-31.09 18.539,-46.581l0.001,-0.003Zm-77.813,-7.834c-2.813,-7.02 -5.627,-14.044 -8.427,-21.082c-0.121,-0.363 -0.279,-0.763 -0.451,-1.2c-0.112,-0.284 -0.231,-0.584 -0.349,-0.9l18.9,0c0.5,0 1,0.3 1.2,0.8l0.2,0.6c3.317,8.426 19.354,48.54 29.861,74.823l0.004,0.01l0.005,0.012l0.003,0.008l0,0.001c5.325,13.318 9.226,23.077 9.327,23.346l-18.1,0c-0.7,0 -1.5,-0.3 -1.9,-1c-0.05,-0.1 -0.1,-0.175 -0.15,-0.25c-0.05,-0.075 -0.1,-0.15 -0.15,-0.25c-2.969,-7.226 -5.875,-14.516 -8.772,-21.78l0,0l0,-0.001c-2.274,-5.703 -4.541,-11.39 -6.828,-17.019c-4.737,-12.062 -9.553,-24.084 -14.373,-36.117l0,0l0,-0.001Zm249.073,76.418c-1.2,0 -1.7,-0.1 -2.1,-1.2c-1.823,-5.104 -3.662,-10.191 -5.497,-15.268c-2.697,-7.458 -5.385,-14.895 -8.003,-22.332c-0.6,-1.7 -1.3,-2.3 -3.3,-2.3c-10.7,0.1 -37.6,0.1 -38.4,0.1l0,-17.3l44.5,0c8.2,0 13.6,-6.7 12.1,-14.6c-0.9,-4.8 -5.4,-8.8 -10.3,-9.3c-1,-0.1 -2,-0.1 -3,-0.1l-43.2,0l0,-17.4l44.7,0c15.2,0.1 27.7,11 29.3,25.9c1.3,12.3 -3.8,21.8 -14.3,28.5c-0.186,0.111 -0.386,0.237 -0.6,0.371c-0.361,0.227 -0.761,0.478 -1.2,0.729c3.121,8.714 6.276,17.325 9.446,25.974l0,0.001l0.01,0.028c2.21,6.03 4.427,12.08 6.644,18.197l-16.8,0Z"
+                      style="fill:#fff;"/>
+            </svg>
+        </a>
+        <!-- Call-to-Action Code -->
+        <!--
+        <div class="header-link">
+                        <span class="hs-cta-wrapper"
+                              id="hs-cta-wrapper-168b4327-be6c-4a5a-af4a-c74e60322311"><span
+                                class="hs-cta-node hs-cta-168b4327-be6c-4a5a-af4a-c74e60322311"
+                                id="hs-cta-168b4327-be6c-4a5a-af4a-c74e60322311"><a
+                                href="https://cta-redirect.hubspot.com/cta/redirect/7016813/168b4327-be6c-4a5a-af4a-c74e60322311"
+                                target="_blank">Click here to download the Analyzer (free)</a></span><script
+                                charset="utf-8" src="https://js.hscta.net/cta/current.js"></script><script
+                                type="text/javascript"> hbspt.cta.load(7016813, '168b4327-be6c-4a5a-af4a-c74e60322311', {}); </script>
+                        </span>
+        </div>
+        -->
+
+        <!-- Call-to-Action Code -->
+    </div>
+
+
+    <div id="progress-bar-container">
+        <div id="progress-bar-caption">
+            Rendering...
+        </div>
+        <div id="progress-bar">
+            <div id="progress-bar-progress">
+            </div>
+        </div>
+    </div>
+
+    <div id="content" class="open" style="display: none;">
+        <div class="inline-menu">
+            <div style="display: flex; flex-direction: row; margin-top: 20px; align-items: center;">
+                <h3 style="flex: 0 0 365px;">Key Findings</h3>
+                <div style="flex: 0 0 45px; justify-content: flex-end">
+                    <div id="toggle-button" onclick="togglePanel()">
+                        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                             aria-hidden="true" focusable="false" width="30px" height="30px" viewBox="0 0 24 24">
+                            <path d="M11.92 19.92L4 12l7.92-7.92l1.41 1.42l-5.5 5.5H22v2H7.83l5.51 5.5l-1.42 1.42M4 12V2H2v20h2V12z"
+                                  fill="currentColor"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+
+            <ol id="toc">
+
+            </ol>
+        </div>
+        <div class="scrolling-body">
+            <h1>
+                Your Presto Workload Analysis Report is Ready!
+            </h1>
+            <p>
+                This report includes:
+            </p>
+            <div class="insight-overview">
+                <div class="icon" style="background-color: #00B050;">
+
+                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                         aria-hidden="true" focusable="false" width="100%" preserveAspectRatio="xMidYMid meet"
+                         viewBox="0 0 1025 1024">
+                        <path d="M960.193 1024h-320q-27 0-45.5-19t-18.5-45V64q0-26 18.5-45t45.5-19h320q26 0 45 19t19 45v896q0 27-18.5 45.5t-45.5 18.5zm-320-191.5q0 26.5 18.5 45t45 18.5t45.5-18.5t19-45t-19-45.5t-45-19t-45 19t-19 45.5zm320-736.5q0-13-9.5-22.5t-22.5-9.5h-256q-13 0-22.5 9.5t-9.5 22.5v64q0 13 9.5 22.5t22.5 9.5h256q13 0 22.5-9.5t9.5-22.5V96zm0 192q0-13-9.5-22.5t-22.5-9.5h-256q-13 0-22.5 9.5t-9.5 22.5v64q0 13 9.5 22.5t22.5 9.5h256q13 0 22.5-9.5t9.5-22.5v-64zm0 192q0-13-9.5-22.5t-22.5-9.5h-256q-13 0-22.5 9.5t-9.5 22.5v64q0 13 9.5 22.5t22.5 9.5h256q13 0 22.5-9.5t9.5-22.5v-64zm-576 544h-320q-27 0-45.5-19t-18.5-45V64q0-26 18.5-45t45.5-19h320q27 0 45.5 19t18.5 45v896q0 27-18.5 45.5t-45.5 18.5zm-320-191.5q0 26.5 18.5 45t45.5 18.5t45.5-18.5t18.5-45t-18.5-45.5t-45-19t-45.5 19t-19 45.5zm320-736.5q0-13-9.5-22.5t-22.5-9.5h-256q-13 0-22.5 9.5t-9.5 22.5v64q0 13 9.5 22.5t22.5 9.5h256q13 0 22.5-9.5t9.5-22.5V96zm0 192q0-13-9.5-22.5t-22.5-9.5h-256q-13 0-22.5 9.5t-9.5 22.5v64q0 13 9.5 22.5t22.5 9.5h256q13 0 22.5-9.5t9.5-22.5v-64zm0 192q0-13-9.5-22.5t-22.5-9.5h-256q-13 0-22.5 9.5t-9.5 22.5v64q0 13 9.5 22.5t22.5 9.5h256q13 0 22.5-9.5t9.5-22.5v-64z"
+                              fill="currentColor"/>
+                    </svg>
+
+                </div>
+                <div class="text">
+                    <div class="title">Cluster Overview</div>
+                    Facts and figures relating to the period the Analyzer ran, and key usage metrics, such as data scanned and number of
+                    queries.
+                </div>
+            </div>
+            <div class="insight-overview">
+                <div class="icon" style="background-color: black;">
+                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                         aria-hidden="true" focusable="false" width="100%"
+                         style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);"
+                         preserveAspectRatio="xMidYMid meet" viewBox="0 0 1024 741">
+                        <path d="M421.5 602.5Q384 565 384 512t38-91L966 59L603 603q-37 37-90.5 37t-91-37.5zM512 62q-91 0-174.5 36T194 194T98.5 337T63 511q0 106 48 202l-56 28Q0 632 0 512q0-105 40.5-199.5t109-163T313 40.5T512 0q161 0 293 92l-57 38Q639 62 512 62zm421 158q91 132 91 292q0 120-55 229l-56-29q48-95 48-201q0-125-66-234z"
+                              fill="#FFFFFF"/>
+                    </svg>
+                </div>
+                <div class="text">
+                    <div class="title">Key Findings</div>
+                    Deep dive into how effectively and efficiently queries are running on the cluster. Analyses include queries
+                    elapsed time, distribution by users, Presto operator distribution, resource consumption, and more.
+                    Query
+                    analysis includes selectivity analysis, join analysis, and more.
+                </div>
+            </div>
+            <div class="insight-overview">
+                <div class="icon" style="background-color: #832CFF;">
+                    <svg width="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                         aria-hidden="true" focusable="false"
+                         style="-ms-transform: rotate(360deg); -webkit-transform: rotate(360deg); transform: rotate(360deg);"
+                         preserveAspectRatio="xMidYMid meet" viewBox="0 0 512 512">
+                        <path d="M328.85 156.79a26.69 26.69 0 1 0 18.88 7.81a26.6 26.6 0 0 0-18.88-7.81z" fill="white"/>
+                        <path d="M477.44 50.06a.29.29 0 0 1 0-.09a20.4 20.4 0 0 0-15.13-15.3c-29.8-7.27-76.68.48-128.63 21.28c-52.36 21-101.42 52-134.58 85.22A320.7 320.7 0 0 0 169.55 175c-22.33-1-42 2.18-58.57 9.41c-57.74 25.41-74.23 90.44-78.62 117.14a25 25 0 0 0 27.19 29h.13l64.32-7.02c.08.82.17 1.57.24 2.26a34.36 34.36 0 0 0 9.9 20.72l31.39 31.41a34.27 34.27 0 0 0 20.71 9.91l2.15.23l-7 64.24v.13A25 25 0 0 0 206 480a25.25 25.25 0 0 0 4.15-.34C237 475.34 302 459.05 327.34 401c7.17-16.46 10.34-36.05 9.45-58.34a314.78 314.78 0 0 0 33.95-29.55c33.43-33.26 64.53-81.92 85.31-133.52c20.69-51.36 28.48-98.59 21.39-129.53zM370.38 224.94a58.77 58.77 0 1 1 0-83.07a58.3 58.3 0 0 1 0 83.07z"
+                              fill="white"/>
+                        <path d="M161.93 386.44a16 16 0 0 0-11 2.67c-6.39 4.37-12.81 8.69-19.29 12.9c-13.11 8.52-28.79-6.44-21-20l12.15-21a16 16 0 0 0-15.16-24.91A61.25 61.25 0 0 0 72 353.56c-3.66 3.67-14.79 14.81-20.78 57.26A357.94 357.94 0 0 0 48 447.59A16 16 0 0 0 64 464h.4a359.87 359.87 0 0 0 36.8-3.2c42.47-6 53.61-17.14 57.27-20.8a60.49 60.49 0 0 0 17.39-35.74a16 16 0 0 0-13.93-17.82z"
+                              fill="white"/>
+                    </svg>
+                </div>
+                <div class="text">
+                    <div class="title">About Varada</div>
+                    Learn how Varada’s Inline Indexing technology can reduce resource consumption, and significantly
+                    boost response time.
+                </div>
+            </div>
+            <ul class="sections">
+                <li>Cluster Overview
+                    <ul class="cluster-overview">
+                        <li>
+                            <p>
+
+                                The Workload Analyzer ran over a period of <span style="color: #832CFF"
+                                                                                   class="bigger"><span
+                                    id="metrics_days"></span> days</span>
+                                (“Period”),<br> during which <span style="color: #00B050" class="bigger"><span
+                                    id="metrics_input_TB"></span>TB</span> of data
+                                was scanned by <span class="bigger"><span id="metrics_queries"></span> Queries</span>.
+
+                            </p>
+                            <!--
+                            <p>
+
+                                During the Period the average consumption / utilization of the cluster <span
+                                    class="bigger">per day</span> was:
+                            </p>
+
+                            <ul class="metrics">
+                                <li>
+                                    CPU: <span class="bigger">17%</span>
+
+                                </li>
+                                <li>
+                                    Memory: <span class="bigger">59%</span>
+                                </li>
+                                <li>
+                                    Storage: <span class="bigger">76%</span>
+                                </li>
+                                <li>
+                                    Network: <span class="bigger">4%</span>
+                                </li>
+                                <li>
+
+                                    Queries: <span class="bigger" id="metrics_queries">1,456</span>
+                                </li>
+                            </ul>
+
+                            <p>
+                                During the Period, the percent of queries that took over 10 minutes to run was <span
+                                    style="color: #832CFF" class="bigger">36%</span>.
+                            </p>
+                            -->
+                        </li>
+                    </ul>
+                </li>
+                <li>Key Findings
+                    <p>See the graphs below for the key findings in the analysis. </p>
+                    <p>Use the toolbar on the right-hand side of each graph to explore the graph, for example to zoom in and out or to download the graph.
+                        Double-click points in scatter plot graphs to copy the query-id for further investigation.
+                    </p>
+                    <p><u>Note</u>: in scatter plot graphs log scale is used for the X and Y axis, please consider that while analyzing the results.</p>
+                    <ol id="charts" class="charts">
+
+                    </ol>
+                </li>
+                <li>About The Presto Workload Analyzer
+                    <ul style="padding-bottom: 50px;">
+
+                        <p>
+                            Join the Presto Workload Analyzer <b><a
+                                        href="https://join.slack.com/t/prestoworkloa-wc67437/shared_invite/zt-k9ag3s4l-imFSOGL7QFWcLbIsfgD0Mw">Slack</a></b> community or ping us: <b><a
+                                        href="mailto:analyzer@varada.io">analyzer@varada.io</a></b>.
+                        </p>
+                    </ul>
+                </li>
+            </ul>
+            <div style="height: 150px;"></div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

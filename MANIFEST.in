@@ -1,0 +1,4 @@
+include *.md
+include analyzer/output.template.html
+include Dockerfile
+include requirements.txt
