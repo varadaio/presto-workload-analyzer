@@ -18,6 +18,7 @@ Ensure that sufficient disk space is available in your working directory. Typica
 - [Installation](#Installation)
 - [Usage](#Usage)
 - [Screencasts](#Screencasts)
+- [Advanced Features](#Advanced-Features)
 - [Notes](#Notes)
 
 ## Community
@@ -87,8 +88,7 @@ See the following screencasts for usage examples:
 
 [![asciicast](https://asciinema.org/a/1AqxvxYtoIPjzjFEMGeU1p7yR.svg)](https://asciinema.org/a/1AqxvxYtoIPjzjFEMGeU1p7yR)
 
-
-## Notes
+## Advanced Features
 
 - In exceptional circumstances, it may be desirable to do one or more of the following:
 1. Obfuscate the schema names
@@ -116,3 +116,8 @@ After the `./jsonl_process.py` script has been executed, to generate a report ba
 ```bash
 ./analyze.py --high-contrast-mode ./JSONs/summary.jsonl.gz -o ./output.zip
 ```
+
+
+## Notes
+
+Presto® is a trademark of The Linux Foundation.
