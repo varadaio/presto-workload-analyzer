@@ -33,9 +33,12 @@ log = logbook.Logger("collect")
 
 def get(url):
     # User header is required by latest Presto versions.
-    response = requests.get(url, headers={"X-Presto-User": "analyzer"})
+    response = requests.get(url, headers={
+        "X-Presto-User": "analyzer",
+        "X-Trino-User": "analyzer",
+    })
     if not response.ok:
-        log.warn("HTTP {} {} for url: {}", res.status_code, res.reason, url)
+        log.warn("HTTP {} {} for url: {}", response.status_code, response.reason, url)
         return None
     else:
         return response
