@@ -4,9 +4,9 @@
     <img alt="Presto Workload Analyzer Logo" src="resources/Presto_Workload_Analyzer.png" width="50%" />
 </p>
 
-The Workload Analyzer collects Presto workload statistics, and analyzes them. The analysis [report](https://varada.io/wa-sample-report/) provides improved visibility into your analytical workloads, and enables query optimization - to enhance cluster performance.
+The Workload Analyzer collects Presto® and Trino workload statistics, and analyzes them. The analysis [report](https://varada.io/wa-sample-report/) provides improved visibility into your analytical workloads, and enables query optimization - to enhance cluster performance.
 
-The Presto Workload Analyzer collects, and stores, [QueryInfo](https://github.com/trinodb/trino/blob/master/core/trino-main/src/main/java/io/trino/execution/QueryInfo.java) JSONs for queries executed while it is running, and any historical queries held in the Presto Coordinator memory. 
+The Presto® Workload Analyzer collects, and stores, [QueryInfo](https://github.com/trinodb/trino/blob/master/core/trino-main/src/main/java/io/trino/execution/QueryInfo.java) JSONs for queries executed while it is running, and any historical queries held in the Presto® Coordinator memory. 
 
 The collection process has negligible compute-costs, and does not impact cluster query execution in any way.
 Ensure that sufficient disk space is available in your working directory. Typically, a compressed JSON file size will be 50kb - 200kb.
@@ -22,7 +22,7 @@ Ensure that sufficient disk space is available in your working directory. Typica
 - [Notes](#Notes)
 
 ## Community
-Join us on [Slack](https://join.slack.com/t/prestoworkloa-wc67437/shared_invite/zt-k9ag3s4l-imFSOGL7QFWcLbIsfgD0Mw)!
+Join us on [Slack](https://join.slack.com/t/workload-analyzer/shared_invite/zt-lcmkxo01-weqWf_Tw6H5mSQkWYNYO2Q)!
 
 ## Features 
 * Continuously collects and stores [QueryInfo](https://github.com/trinodb/trino/blob/master/core/trino-main/src/main/java/io/trino/execution/QueryInfo.java) JSONs, in the background without impacting query performance.
@@ -30,16 +30,16 @@ Join us on [Slack](https://join.slack.com/t/prestoworkloa-wc67437/shared_invite/
 * Generates an analysis [report](https://varada.io/wa-sample-report/):
   * Query detail- query peak memory, input data read by query, and joins distribution.
   * Table activity- wall time utilization, and input bytes read, by table scans.
-  * Presto Operators- wall time usage, and input bytes read, by operator.
+  * Presto® Operators- wall time usage, and input bytes read, by operator.
 
 ## Supported Versions of Presto
-The Workload Analyzer supports the following Presto versions:
-1. Trino (FKA PrestoSQL)- 332 and older.
-2. PrestoDB- 0.234 and older.
+The Workload Analyzer supports the following versions:
+1. Trino (FKA PrestoSQL)- 351 and older.
+2. PrestoDB- 0.245.1 and older.
 3. Starburst Enterprise- 323e and older.
 4. Dataproc- 1.5.x and older.
 
-Although the Workload Analyzer may run with newer versions of Presto, these scenarios have not been tested.
+Although the Workload Analyzer may run with newer versions of Presto®, these scenarios have not been tested.
 
 ## Installation
 For installation, see [here](INSTALL.md).
