@@ -18,25 +18,31 @@
 
 import argparse
 import gzip
-import json
-import logbook
-import os
 import pathlib
-import requests
 import sys
 import time
-import traceback
+import logbook
+import requests
+from requests.auth import HTTPBasicAuth
 
 logbook.StreamHandler(sys.stderr).push_application()
 log = logbook.Logger("collect")
 
 
-def get(url):
+def get(url, username, password):
     # User header is required by latest Presto versions.
-    response = requests.get(url, headers={
+    req_headers = headers={
         "X-Presto-User": "analyzer",
         "X-Trino-User": "analyzer",
-    })
+    }
+
+    if all([username, password]):
+        response = requests.get(url, req_headers, auth=HTTPBasicAuth(
+            username,
+            password))
+    else:
+        response = requests.get(url, req_headers)
+
     if not response.ok:
         log.warn("HTTP {} {} for url: {}", response.status_code, response.reason, url)
         return None
@@ -48,6 +54,8 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("-c", "--coordinator", default="http://localhost:8080")
     p.add_argument("-e", "--query-endpoint", default="/v1/query")
+    p.add_argument("-u", "--username")
+    p.add_argument("-p", "--password")
     p.add_argument("-o", "--output-dir", default="JSONs", type=pathlib.Path)
     p.add_argument("-d", "--delay", default=0.1, type=float)
     p.add_argument("--loop", default=False, action="store_true")
@@ -60,7 +68,7 @@ def main():
     done_state = {"FINISHED", "FAILED"}
     while True:
         # Download last queries' IDs:
-        response = get(endpoint)
+        response = get(endpoint, args.username, args.password)
         if not response:
             return
         ids = [q["queryId"] for q in response.json() if q["state"] in done_state]
@@ -76,7 +84,7 @@ def main():
             time.sleep(args.delay)  # for rate-limiting
             log.info("Downloading {} -> {}", url, output_file)
             try:
-                response = get(url)
+                response = get(endpoint, args.username, args.password)
                 if not response:
                     continue
             except Exception:
