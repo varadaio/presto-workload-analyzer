@@ -18,6 +18,7 @@
 
 
 import argparse
+import ast
 import gzip
 import json
 import logbook
@@ -63,6 +64,18 @@ class NameObfuscator:
         return pformat(self.__name_map)
 
 
+class ListObfuscator(NameObfuscator):
+    def __call__(self, old_list):
+        print(old_list)
+        if isinstance(old_list, str):  # str due to nested_lookup behavior
+            old_list = ast.literal_eval(old_list)
+
+        if not isinstance(old_list, list):
+            raise Exception(f"List obfuscator got incompatible type {type(old_list)}")
+
+        return [super(ListObfuscator, self).__call__(old_name) for old_name in old_list]
+
+
 def process_line(stat, obfuscator_dict):
     """
     obfuscator_dict - dict with structure {key: callback_function}
@@ -99,6 +112,8 @@ def main():
     p.add_argument("--rename-schemas", action="store_true", default=False)
     p.add_argument("--rename-catalogs", action="store_true", default=False)
     p.add_argument("--remove-locations", action="store_true", default=False)
+    p.add_argument("--rename-user", action="store_true", default=False)
+    p.add_argument("--rename-partitions", action="store_true", default=False)
     args = p.parse_args()
 
     if not args.input_file:
@@ -125,6 +140,15 @@ def main():
         obfuscator_dict["targetPath"] = lambda x: ''
         obfuscator_dict["writePath"] = lambda x: ''
 
+    if args.rename_user:
+        user_obfuscator = NameObfuscator('user')
+        obfuscator_dict["user"] = user_obfuscator
+        obfuscator_dict["principal"] = user_obfuscator
+
+    if args.rename_partitions:
+        partitions_obfuscator = ListObfuscator('partition')
+        obfuscator_dict["partitionIds"] = partitions_obfuscator
+
     obfuscate = len(obfuscator_dict) > 0
 
     log.info(
@@ -146,8 +170,7 @@ def main():
         for line in tqdm(lines, unit="lines", disable=args.quiet):
             try:
                 s = json.loads(line)
-                if args.filter_schema and not filter_line(s, {"schema": args.filter_schema,
-                                                              "schemaName": args.filter_schema}):
+                if args.filter_schema and not filter_line(s, {"schema": args.filter_schema, "schemaName": args.filter_schema}):
                     continue
 
                 if obfuscate:
@@ -159,12 +182,16 @@ def main():
                 log.exception("failed to process {}", line)
                 if args.fail_on_error:
                     raise
-
-    log.info("{} processing done", len(lines))
-    if args.rename_schemas:
-        log.info("Schemas translation table:\n{}", schema_obfuscator)
-    if args.rename_catalogs:
-        log.info("Catalogs translation table:\n{}", catalog_obfuscator)
+    if not args.quiet:
+        log.info("{} processing done", len(lines))
+        if args.rename_schemas:
+            log.info("Schemas translation table:\n{}", schema_obfuscator)
+        if args.rename_catalogs:
+            log.info("Catalogs translation table:\n{}", catalog_obfuscator)
+        if args.rename_user:
+            log.info("Users translation table:\n{}", user_obfuscator)
+        if args.rename_partitions:
+            log.info("Partitions translation table:\n{}", partitions_obfuscator)
 
 
 if __name__ == "__main__":

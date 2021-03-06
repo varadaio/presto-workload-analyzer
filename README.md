@@ -115,6 +115,11 @@ In the following example, all the schema names are obfuscated:
 ./jsonl_process.py -i ./JSONs/summary.jsonl.gz -o ./processed_summary.jsonl.gz --rename-schemas 
 ```
 
+In the following example, all the partition and user names are obfuscated:
+```bash
+./jsonl_process.py -i ./JSONs/summary.jsonl.gz -o ./processed_summary.jsonl.gz --rename-partitions --rename-user 
+```
+
 After the `./jsonl_process.py` script has been executed, to generate a report based on the new summary file, run:
 ```bash
 ./analyze.py -i ./processed_summary.jsonl.gz -o ./output.zip
