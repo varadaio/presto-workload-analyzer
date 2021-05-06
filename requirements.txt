@@ -8,3 +8,4 @@ logbook==1.5.3
 tqdm==4.45.0
 pytest==5.4.1
 nested-lookup==0.2.21
+boto3==1.12.46

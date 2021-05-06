@@ -26,6 +26,8 @@ import requests
 import sys
 import time
 import traceback
+from s3 import s3_provider
+import helpers
 
 logbook.StreamHandler(sys.stderr).push_application()
 log = logbook.Logger("collect")
@@ -34,7 +36,6 @@ log = logbook.Logger("collect")
 def get(url):
     # User header is required by latest Presto versions.
     response = requests.get(url, headers={
-        "X-Presto-User": "analyzer",
         "X-Trino-User": "analyzer",
     })
     if not response.ok:
@@ -85,6 +86,17 @@ def main():
 
             with gzip.open(output_file.open("wb"), "wb") as f:
                 f.write(response.content)
+
+            s3_file = f"presto_analyzer/{output_file}"
+
+            try:
+                s3_provider.upload(output_file, s3_file)
+
+            except Exception as e:
+                log.error(f' Exception in Uploading file to S3 {output_file}'
+                          f'exception={e}')
+
+            helpers.remove_local_file(output_file)
 
         if args.loop:
             time.sleep(args.loop_delay)
