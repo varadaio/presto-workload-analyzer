@@ -22,7 +22,7 @@ Ensure that sufficient disk space is available in your working directory. Typica
 - [Notes](#Notes)
 
 ## Community
-Join us on [Slack](https://join.slack.com/t/workload-analyzer/shared_invite/zt-lcmkxo01-weqWf_Tw6H5mSQkWYNYO2Q)!
+Join us on [Slack](https://join.slack.com/t/workload-analyzer/shared_invite/zt-qcxpt3om-AXnjD~BjaXuVIoJfPQqHww)!
 
 ## Features 
 * Continuously collects and stores [QueryInfo](https://github.com/trinodb/trino/blob/master/core/trino-main/src/main/java/io/trino/execution/QueryInfo.java) JSONs, in the background without impacting query performance.
