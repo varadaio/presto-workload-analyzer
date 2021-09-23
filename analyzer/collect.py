@@ -18,49 +18,62 @@
 
 import argparse
 import gzip
-import json
-import logbook
-import os
 import pathlib
-import requests
 import sys
 import time
-import traceback
+import logbook
+import requests
+from requests.auth import HTTPBasicAuth
 
 logbook.StreamHandler(sys.stderr).push_application()
 log = logbook.Logger("collect")
 
 
-def get(url):
-    # User header is required by latest Presto versions.
-    response = requests.get(url, headers={
-        "X-Presto-User": "analyzer",
-        "X-Trino-User": "analyzer",
-    })
-    if not response.ok:
-        log.warn("HTTP {} {} for url: {}", response.status_code, response.reason, url)
-        return None
-    else:
-        return response
+class Client:
+    def __init__(self, username, password):
+        self._username = username
+        self._password = password
+
+    def get(self, url):
+        # User header is required by latest Presto versions.
+        req_headers = {
+            "X-Presto-User": "analyzer",
+            "X-Trino-User": "analyzer"
+        }
+
+        if all([self._username, self._password]):
+            response = requests.get(url, req_headers, auth=HTTPBasicAuth(
+                self._username,
+                self._password))
+        else:
+            response = requests.get(url, headers=req_headers)
+
+        if not response.ok:
+            log.warn("HTTP {} {} for url: {}", response.status_code, response.reason, url)
+            return None
+        else:
+            return response
 
 
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("-c", "--coordinator", default="http://localhost:8080")
     p.add_argument("-e", "--query-endpoint", default="/v1/query")
+    p.add_argument("-u", "--username")
+    p.add_argument("-p", "--password")
     p.add_argument("-o", "--output-dir", default="JSONs", type=pathlib.Path)
     p.add_argument("-d", "--delay", default=0.1, type=float)
     p.add_argument("--loop", default=False, action="store_true")
     p.add_argument("--loop-delay", type=float, default=1.0)
     args = p.parse_args()
-
+    client = Client(args.username, args.password)
     endpoint = "{}{}".format(args.coordinator, args.query_endpoint)
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
     done_state = {"FINISHED", "FAILED"}
     while True:
         # Download last queries' IDs:
-        response = get(endpoint)
+        response = client.get(endpoint)
         if not response:
             return
         ids = [q["queryId"] for q in response.json() if q["state"] in done_state]
@@ -76,7 +89,7 @@ def main():
             time.sleep(args.delay)  # for rate-limiting
             log.info("Downloading {} -> {}", url, output_file)
             try:
-                response = get(url)
+                response = client.get(url)
                 if not response:
                     continue
             except Exception:
