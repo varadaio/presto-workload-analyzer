@@ -1177,15 +1177,19 @@ def joins_selectivity(stats):
 def collect_metrics(stats):
     cpu_days = sum(s["cpu_time"] for s in stats) / (60 * 60 * 24)
     scheduled_days = sum(s["scheduled_time"] for s in stats) / (60 * 60 * 24)
+    input_rows = sum(s["input_rows"] for s in stats)
     input_TB = sum(s["input_size"] for s in stats) / 1e12
     dates = (query_datetime(s["query_id"]) for s in stats)
     n_days = len(set(trunc_date(d) for d in dates))
+    n_users = len(set(s["user"] for s in stats))
     return {
         "days": n_days,
         "cpu_days": cpu_days,
         "scheduled_days": scheduled_days,
         "queries": len(stats),
+        "input_rows": input_rows,
         "input_TB": input_TB,
+        "users": n_users,
     }
 
 
