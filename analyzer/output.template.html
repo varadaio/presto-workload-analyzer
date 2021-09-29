@@ -97,6 +97,11 @@
             renderTOCItemRecursive(0);
             document.getElementById("metrics_days").innerText = structure.metrics.days
             document.getElementById("metrics_queries").innerText = structure.metrics.queries
+            if (structure.metrics.input_rows < 1E9) {
+                document.getElementById("metrics_rows").innerText = structure.metrics.input_rows
+            } else {
+                document.getElementById("metrics_rows").innerText = (Math.round(structure.metrics.input_rows / 1E9 * 10) / 10) + " billion"
+            }
             let inputTB;
             if (structure.metrics.input_TB < 1) {
                 inputTB = parseFloat(structure.metrics.input_TB).toFixed(3);
@@ -104,6 +109,7 @@
                 inputTB = Math.round(structure.metrics.input_TB * 10) / 10;
             }
             document.getElementById("metrics_input_TB").innerText = inputTB;
+            document.getElementById("metrics_users").innerText = structure.metrics.users
         }
 
         if (document.readyState !== "loading") render("graph");
@@ -637,14 +643,13 @@
                     <ul class="cluster-overview">
                         <li>
                             <p>
-
-                                The Workload Analyzer ran over a period of <span style="color: #832CFF"
-                                                                                   class="bigger"><span
-                                    id="metrics_days"></span> days</span>
-                                (“Period”),<br> during which <span style="color: #00B050" class="bigger"><span
-                                    id="metrics_input_TB"></span>TB</span> of data
-                                was scanned by <span class="bigger"><span id="metrics_queries"></span> Queries</span>.
-
+                                The Workload Analyzer
+                                ran over a period of <span class="bigger"><span id="metrics_days"></span> days</span>
+                                and analyzed <span style="color: #832CFF" class="bigger"><span id="metrics_queries"></span> queries</span>
+                                that were executed by <span class="bigger"><span id="metrics_users"></span> users</span>.
+                                <br>
+                                During this period <span class="bigger"><span id="metrics_rows"></span> rows</span>
+                                and <span style="color: #00B050" class="bigger"><span id="metrics_input_TB"></span> TB</span> of data were scanned.
                             </p>
                             <!--
                             <p>
