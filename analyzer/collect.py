@@ -30,23 +30,27 @@ log = logbook.Logger("collect")
 
 
 class Client:
-    def __init__(self, username, password):
+    def __init__(self, username, password, username_request_header):
         self._username = username
         self._password = password
+        self._req_headers = self.set_req_headers(username_request_header)
+
+    def set_req_headers(self, request_header):
+        if request_header:
+            if request_header not in ('X-Trino-User', 'X-Presto-User'):
+                log.warning('Got client-request-header which is not X-Trino-User or X-Presto-User, collecting JSONs might fail')
+            return {request_header: "analyzer"}
+        else:
+            return {"X-Trino-User": "analyzer",
+                    "X-Presto-User": "analyzer"}
 
     def get(self, url):
-        # User header is required by latest Presto versions.
-        req_headers = {
-            "X-Presto-User": "analyzer",
-            "X-Trino-User": "analyzer"
-        }
-
         if all([self._username, self._password]):
-            response = requests.get(url, req_headers, auth=HTTPBasicAuth(
+            response = requests.get(url, self._req_headers, auth=HTTPBasicAuth(
                 self._username,
                 self._password))
         else:
-            response = requests.get(url, headers=req_headers)
+            response = requests.get(url, headers=self._req_headers)
 
         if not response.ok:
             log.warn("HTTP {} {} for url: {}", response.status_code, response.reason, url)
@@ -60,13 +64,14 @@ def main():
     p.add_argument("-c", "--coordinator", default="http://localhost:8080")
     p.add_argument("-e", "--query-endpoint", default="/v1/query")
     p.add_argument("-u", "--username")
+    p.add_argument("--username-request-header")
     p.add_argument("-p", "--password")
     p.add_argument("-o", "--output-dir", default="JSONs", type=pathlib.Path)
     p.add_argument("-d", "--delay", default=0.1, type=float)
     p.add_argument("--loop", default=False, action="store_true")
     p.add_argument("--loop-delay", type=float, default=1.0)
     args = p.parse_args()
-    client = Client(args.username, args.password)
+    client = Client(args.username, args.password, args.username_request_header)
     endpoint = "{}{}".format(args.coordinator, args.query_endpoint)
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
