@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (c) 2019-2021 Varada, Inc.
+# Copyright (c) 2019-2022 Varada, Inc.
 # This file is part of Presto Workload Analyzer.
 #
 # Presto Workload Analyzer is free software: you can redistribute it and/or modify
