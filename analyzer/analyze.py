@@ -807,7 +807,7 @@ def walltime_vs_selectivity(stats, topK=5, colorblind=False):
     shape_size = _get_size(colorblind)
     top_tables = set(top_tables[:topK])
 
-    I = numpy.array([(t in top_tables) for t in tables], dtype=numpy.bool)
+    I = numpy.array([(t in top_tables) for t in tables], dtype=bool)
     selectivity = selectivity[I]
     elapsed_time = wall[I]
     tables = tables[I]
@@ -896,7 +896,7 @@ def inputrows_vs_selectivity(stats, topK=5, colorblind=False):
     shape_size = _get_size(colorblind)
     top_tables = set(top_tables[:topK])
 
-    I = numpy.array([(t in top_tables) for t in tables], dtype=numpy.bool)
+    I = numpy.array([(t in top_tables) for t in tables], dtype=bool)
     selectivity = selectivity[I]
     input_rows = input_rows[I]
     tables = tables[I]
