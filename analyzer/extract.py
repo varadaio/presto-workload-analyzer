@@ -135,35 +135,38 @@ def summary(j: dict):
         fragments = list(iter_plans(stage))
         substages = build_tasks_in_substages(stage)
 
-    return dict(
-        query=j["query"],
-        query_id=j["queryId"],
-        user=session["user"],
-        state=j["state"],
-        error_code=j.get("errorCode"),
-        update=j.get("updateType"),
-        elapsed_time=parse_time(stats["elapsedTime"]),
-        cpu_time=parse_time(stats["totalCpuTime"]),
-        scheduled_time=parse_time(stats["totalScheduledTime"]),
-        blocked_time=parse_time(stats["totalBlockedTime"]),
-        input_size=(
-                parse_size(stats["rawInputDataSize"])
-                or parse_size(stats.get("inputDataSize"))
-                or 0
-        ),
-        output_size=parse_size(stats["outputDataSize"]),
-        network_size=parse_size(stats.get("internalNetworkInputDataSize")),
-        input_rows=stats["rawInputPositions"],
-        output_rows=stats["outputPositions"],
-        network_rows=stats.get("internalNetworkInputPositions"),
-        peak_mem=parse_size(stats["peakTotalMemoryReservation"]),
-        written_size=parse_size(stats.get("rawWrittenDataSize")),
-        operators=list(get_operators(stats["operatorSummaries"])),
-        inputs=j["inputs"],
-        output=j.get("output"),
-        fragments=fragments,
-        substages=substages
-    )
+    try:
+        return dict(
+            query=j["query"],
+            query_id=j["queryId"],
+            user=session["user"],
+            state=j["state"],
+            error_code=j.get("errorCode"),
+            update=j.get("updateType"),
+            elapsed_time=parse_time(stats["elapsedTime"]),
+            cpu_time=parse_time(stats["totalCpuTime"]),
+            scheduled_time=parse_time(stats["totalScheduledTime"]),
+            blocked_time=parse_time(stats["totalBlockedTime"]),
+            input_size=(
+                    parse_size(stats["rawInputDataSize"])
+                    or parse_size(stats.get("inputDataSize"))
+                    or 0
+            ),
+            output_size=parse_size(stats["outputDataSize"]),
+            network_size=parse_size(stats.get("internalNetworkInputDataSize")),
+            input_rows=stats["rawInputPositions"],
+            output_rows=stats["outputPositions"],
+            network_rows=stats.get("internalNetworkInputPositions"),
+            peak_mem=parse_size(stats["peakTotalMemoryReservation"]),
+            written_size=parse_size(stats.get("rawWrittenDataSize")),
+            operators=list(get_operators(stats["operatorSummaries"])),
+            inputs=j["inputs"],
+            output=j.get("output"),
+            fragments=fragments,
+            substages=substages
+        )
+    except KeyError:
+        log.warning("missing key for {}", stats)
 
 
 def main():
