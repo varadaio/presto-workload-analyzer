@@ -14,12 +14,6 @@ source .env/bin/activate && pip install -U pip wheel
 pip install .
 ```
 
-See the following screencast for installation example:
-
-
-[![asciicast](https://asciinema.org/a/v30C629gK6zq4YkCxMBrPZmA3.svg)](https://asciinema.org/a/v30C629gK6zq4YkCxMBrPZmA3)
-
-
 ## 2. Docker
 
 ### Install (on Ubuntu 18.04 @ EC2)
