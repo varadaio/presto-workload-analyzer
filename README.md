@@ -52,7 +52,7 @@ cd analyzer/
 ```
 To collect statistics from your cluster, run the following script for a period that will provide a representative sample of your workload.
 ```bash
-./collect.py -c http://<presto-coordinator>:8080 -o ./JSONs/ --loop
+./collect.py -c http://<presto-coordinator>:8080 --username-request-header "X-Trino-User" -o ./JSONs/ --loop
 ```
 Notes:
 1. In most cases, this period will be between 5 and 15 days, with longer durations providing more significant analysis.
@@ -68,7 +68,7 @@ To analyze the downloaded JSONs directory (e.g. `./JSONs/`) and generate a zippe
 To collect statistics from your cluster, run the following script for a period that will provide a representative sample of your workload.
 ```bash
 $ mkdir JSONs/
-$ docker run -v $PWD/JSONs/:/app/JSONs analyzer ./analyzer/collect.py -c http://$PRESTO_COORDINATOR:8080 -o JSONs/ --loop
+$ docker run -v $PWD/JSONs/:/app/JSONs analyzer ./analyzer/collect.py -c http://$PRESTO_COORDINATOR:8080 --username-request-header "X-Trino-User" -o JSONs/ --loop
 ```
 To analyze the downloaded JSONs directory (e.g. `./JSONs/`), and generate a zipped HTML report, execute the following commands:
 ```bash
