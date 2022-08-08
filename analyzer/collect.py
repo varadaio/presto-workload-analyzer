@@ -39,9 +39,9 @@ class Client:
         if request_header:
             if request_header not in ('X-Trino-User', 'X-Presto-User'):
                 log.warning('Got client-request-header which is not X-Trino-User or X-Presto-User, collecting JSONs might fail')
-            return {request_header: "analyzer"}
+            return {request_header: "root"}
         else:
-            return {"X-Trino-User": "analyzer",
+            return {"X-Trino-User": "root",
                     "X-Presto-User": "analyzer"}
 
     def get(self, url):

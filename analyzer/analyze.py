@@ -36,7 +36,7 @@ logbook.StreamHandler(sys.stderr).push_application()
 log = logbook.Logger("analyze")
 
 from bokeh.embed import json_item
-from bokeh.models import ColumnDataSource, TapTool, Span, Slope, ranges, LabelSet
+from bokeh.models import ColumnDataSource, TapTool, Span, Slope, ranges, LabelSet, HoverTool
 from bokeh.models.callbacks import CustomJS
 from bokeh.palettes import Category20c, Category10, Colorblind
 from bokeh.plotting import figure, output_file, save
@@ -509,6 +509,10 @@ def pie_chart(keys, values, title, top=20):
         legend_field="labels",
         source=data,
     )
+    hover = p.select(dict(type=HoverTool))
+    hover.tooltips = [
+        ('keys', '@keys'),
+    ]
     p.axis.axis_label = None
     p.axis.visible = False
     p.grid.grid_line_color = None
@@ -810,7 +814,7 @@ def walltime_vs_selectivity(stats, topK=5, colorblind=False):
     I = numpy.array([(t in top_tables) for t in tables], dtype=bool)
     selectivity = selectivity[I]
     elapsed_time = wall[I]
-    tables = tables[I]
+    tables = [shorten(name) for table in tables[I]]
     query_ids = query_ids[I]
 
     markers = ["circle", "diamond", "square", "triangle", "cross", "asterisk"]
