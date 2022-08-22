@@ -571,7 +571,7 @@ def parse_table_name(scan_node):
     else:
         schema_name = handle.get("schemaName")  # may be missing
         table_name = handle.get("tableName") or handle.get("table")
-        if table_name is None:
+        if table_name is None and handle.get("id",None):
             # MemoryTableHandle doesn't contain its name in PrestoSQL 306+
             table_name = "{}:{}".format(handle["@type"], handle["id"])
         if isinstance(table_name, dict):  # JMX may contain schema information here
