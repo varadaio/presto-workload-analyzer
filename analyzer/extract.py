@@ -196,10 +196,13 @@ def main():
                     else path.open("rt")
                 )
                 with input_file as f:
-                    s = summary(json.load(f))
-                    if s:
-                        json.dump(s, output)
-                        output.write("\n")
+                    try:
+                        s = summary(json.load(f))
+                        if s:
+                            json.dump(s, output)
+                            output.write("\n")
+                    except ValueError:
+                        log.info('Got a non-valid JSON file, discarding this JSON file')
                 pbar.update(size)
 
     log.info(
