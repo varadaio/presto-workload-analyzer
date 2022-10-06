@@ -578,7 +578,7 @@ def parse_table_name(scan_node):
             schema_name = table_name["schema"]
             table_name = table_name["table"]
 
-    connector_id = table.get("connectorId") or table["catalogName"]
+    connector_id = table.get("connectorId") or table.get("catalogHandle",None) or table.get("catalogName",None)
     values = [connector_id, schema_name, table_name]
     values = [v for v in values if v is not None]
     return ".".join(values)
