@@ -126,7 +126,7 @@ After the `./jsonl_process.py` script has been executed, to generate a report ba
 ```
 - To create a high-contrast report, use the `--high-contrast-mode` parameter, for example:
 ```bash
-./analyze.py --high-contrast-mode ./JSONs/summary.jsonl.gz -o ./output.zip
+./analyze.py --high-contrast-mode -i ./JSONs/summary.jsonl.gz -o ./output.zip
 ```
 
 
