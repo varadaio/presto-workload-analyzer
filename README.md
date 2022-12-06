@@ -34,9 +34,9 @@ Join us on [Slack](https://join.slack.com/t/workload-analyzer/shared_invite/zt-q
 
 ## Supported Versions of Presto
 The Workload Analyzer supports the following versions:
-1. Trino (FKA PrestoSQL)- 393 and older.
+1. Trino (FKA PrestoSQL)- 402 and older.
 2. PrestoDB- 0.245.1 and older.
-3. Starburst Enterprise- 393e and older.
+3. Starburst Enterprise- 402e and older.
 4. Dataproc- 1.5.x and older.
 
 Although the Workload Analyzer may run with newer versions of Presto®, these scenarios have not been tested.
