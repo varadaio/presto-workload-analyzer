@@ -30,15 +30,17 @@ log = logbook.Logger("collect")
 
 
 class Client:
-    def __init__(self, username, password, username_request_header):
+    def __init__(self, username, password, certificate_verification, username_request_header):
         self._username = username
         self._password = password
+        self._certificate_verification = certificate_verification
         self._req_headers = self.set_req_headers(username_request_header)
 
     def set_req_headers(self, request_header):
         if request_header:
             if request_header not in ('X-Trino-User', 'X-Presto-User'):
-                log.warning('Got client-request-header which is not X-Trino-User or X-Presto-User, collecting JSONs might fail')
+                log.warning(
+                    'Got client-request-header which is not X-Trino-User or X-Presto-User, collecting JSONs might fail')
             return {request_header: "analyzer"}
         else:
             return {"X-Trino-User": "analyzer",
@@ -48,7 +50,7 @@ class Client:
         if all([self._username, self._password]):
             response = requests.get(url, self._req_headers, auth=HTTPBasicAuth(
                 self._username,
-                self._password))
+                self._password), verify=self._certificate_verification)
         else:
             response = requests.get(url, headers=self._req_headers)
 
@@ -59,6 +61,15 @@ class Client:
             return response
 
 
+def str_to_bool(v):
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+
+
 def main():
     p = argparse.ArgumentParser()
     p.add_argument("-c", "--coordinator", default="http://localhost:8080")
@@ -66,12 +77,13 @@ def main():
     p.add_argument("-u", "--username")
     p.add_argument("--username-request-header")
     p.add_argument("-p", "--password")
+    p.add_argument("--certificate-verification", default=True, type=str_to_bool)
     p.add_argument("-o", "--output-dir", default="JSONs", type=pathlib.Path)
     p.add_argument("-d", "--delay", default=0.1, type=float)
     p.add_argument("--loop", default=False, action="store_true")
     p.add_argument("--loop-delay", type=float, default=1.0)
     args = p.parse_args()
-    client = Client(args.username, args.password, args.username_request_header)
+    client = Client(args.username, args.password, args.certificate_verification, args.username_request_header)
     endpoint = "{}{}".format(args.coordinator, args.query_endpoint)
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
