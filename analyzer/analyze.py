@@ -23,23 +23,24 @@ import datetime
 import gzip
 import itertools
 import json
-import logbook
-import numpy
 import pathlib
 import re
 import sys
 import zipfile
-from tqdm import tqdm
 from inspect import signature
+
+import logbook
+import numpy
+from tqdm import tqdm
 
 logbook.StreamHandler(sys.stderr).push_application()
 log = logbook.Logger("analyze")
 
 from bokeh.embed import json_item
-from bokeh.models import ColumnDataSource, TapTool, Span, Slope, ranges, LabelSet
+from bokeh.models import ColumnDataSource, TapTool, Span, Slope, LabelSet
 from bokeh.models.callbacks import CustomJS
 from bokeh.palettes import Category20c, Category10, Colorblind
-from bokeh.plotting import figure, output_file, save
+from bokeh.plotting import figure
 
 
 def groupby(keys, values, reducer):
@@ -571,14 +572,14 @@ def parse_table_name(scan_node):
     else:
         schema_name = handle.get("schemaName")  # may be missing
         table_name = handle.get("tableName") or handle.get("table")
-        if table_name is None and handle.get("id",None):
+        if table_name is None and handle.get("id", None):
             # MemoryTableHandle doesn't contain its name in PrestoSQL 306+
             table_name = "{}:{}".format(handle["@type"], handle["id"])
         if isinstance(table_name, dict):  # JMX may contain schema information here
             schema_name = table_name["schema"]
             table_name = table_name["table"]
 
-    connector_id = table.get("connectorId") or table.get("catalogHandle",None) or table.get("catalogName",None)
+    connector_id = table.get("connectorId") or table.get("catalogHandle", None) or table.get("catalogName", None)
     values = [connector_id, schema_name, table_name]
     values = [v for v in values if v is not None]
     return ".".join(values)
@@ -1193,28 +1194,7 @@ def collect_metrics(stats):
     }
 
 
-def main():
-    p = argparse.ArgumentParser()
-    p.add_argument(
-        "-i",
-        "--input-file",
-        type=pathlib.Path,
-        help="Path to the extracted JSONL file (the output of extract.py)",
-    )
-    p.add_argument(
-        "-o",
-        "--output-file",
-        type=pathlib.Path,
-        default="./output.zip",
-        help="Path to the resulting zipped HTML report",
-    )
-    p.add_argument("-l", "--limit", type=int)
-    p.add_argument("--filter", type=str)
-    p.add_argument("--fail-on-error", action="store_true", default=False)
-    p.add_argument("--high-contrast-mode", action="store_true", default=False)
-    p.add_argument("-q", "--quiet", action="store_true", default=False)
-    args = p.parse_args()
-
+def analyze(args):
     log.info(
         "loading {} = {:.3f} MB", args.input_file, args.input_file.stat().st_size / 1e6
     )
@@ -1290,6 +1270,36 @@ def main():
             f.write(output)
     else:
         raise ValueError("Unsupport output file extension: {}".format(args.output_file))
+
+
+def get_args_parser():
+    p = argparse.ArgumentParser()
+    p.add_argument(
+        "-i",
+        "--input-file",
+        type=pathlib.Path,
+        help="Path to the extracted JSONL file (the output of extract.py)",
+    )
+    p.add_argument(
+        "-o",
+        "--output-file",
+        type=pathlib.Path,
+        default="./output.zip",
+        help="Path to the resulting zipped HTML report",
+    )
+    p.add_argument("-l", "--limit", type=int)
+    p.add_argument("--filter", type=str)
+    p.add_argument("--fail-on-error", action="store_true", default=False)
+    p.add_argument("--high-contrast-mode", action="store_true", default=False)
+    p.add_argument("-q", "--quiet", action="store_true", default=False)
+
+    return p
+
+
+def main():
+    args = get_args_parser().parse_args()
+
+    analyze(args)
 
 
 if __name__ == "__main__":

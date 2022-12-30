@@ -9,3 +9,4 @@ logbook==1.5.3
 tqdm==4.45.0
 pytest==5.4.1
 nested-lookup==0.2.21
+prometheus-client==0.15.0

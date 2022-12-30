@@ -21,9 +21,14 @@ import gzip
 import pathlib
 import sys
 import time
+from datetime import datetime
+
 import logbook
 import requests
 from requests.auth import HTTPBasicAuth
+
+from extract import summary
+from .analyze import query_datetime
 
 logbook.StreamHandler(sys.stderr).push_application()
 log = logbook.Logger("collect")
@@ -70,22 +75,16 @@ def str_to_bool(v):
         return False
 
 
-def main():
-    p = argparse.ArgumentParser()
-    p.add_argument("-c", "--coordinator", default="http://localhost:8080")
-    p.add_argument("-e", "--query-endpoint", default="/v1/query")
-    p.add_argument("-u", "--username")
-    p.add_argument("--username-request-header")
-    p.add_argument("-p", "--password")
-    p.add_argument("--certificate-verification", default=True, type=str_to_bool)
-    p.add_argument("-o", "--output-dir", default="JSONs", type=pathlib.Path)
-    p.add_argument("-d", "--delay", default=0.1, type=float)
-    p.add_argument("--loop", default=False, action="store_true")
-    p.add_argument("--loop-delay", type=float, default=1.0)
-    args = p.parse_args()
+def collect(args):
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+
     client = Client(args.username, args.password, args.certificate_verification, args.username_request_header)
     endpoint = "{}{}".format(args.coordinator, args.query_endpoint)
-    args.output_dir.mkdir(parents=True, exist_ok=True)
+
+    if args.only_new:
+        start_date = datetime.now()
+    else:
+        start_date = datetime.strptime('1900-01-01', '%Y-%m-%d')
 
     done_state = {"FINISHED", "FAILED"}
     while True:
@@ -116,10 +115,38 @@ def main():
             with gzip.open(output_file.open("wb"), "wb") as f:
                 f.write(response.content)
 
+            if args.prometheus:
+                if query_datetime(query_id) >= start_date:
+                    yield summary(response.json())
+
         if args.loop:
             time.sleep(args.loop_delay)
         else:
             break
+
+
+def get_args_parser():
+    p = argparse.ArgumentParser()
+    group = p.add_argument_group('collect')
+
+    group.add_argument("-c", "--coordinator", default="http://localhost:8080")
+    group.add_argument("-e", "--query-endpoint", default="/v1/query")
+    group.add_argument("-u", "--username")
+    group.add_argument("--username-request-header")
+    group.add_argument("-p", "--password")
+    group.add_argument("--certificate-verification", default=True, type=str_to_bool)
+    group.add_argument("-o", "--output-dir", default="JSONs", type=pathlib.Path)
+    group.add_argument("-d", "--delay", default=0.1, type=float)
+    group.add_argument("--loop", default=False, action="store_true")
+    group.add_argument("--loop-delay", type=float, default=1.0)
+    group.add_argument("--only-new", default=False, action="store_true")
+    group.add_argument("--prometheus", default=False, action="store_true")
+
+    return p
+
+
+def main():
+    collect(get_args_parser().parse_args())
 
 
 if __name__ == "__main__":
