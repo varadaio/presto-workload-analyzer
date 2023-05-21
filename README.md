@@ -4,7 +4,7 @@
     <img alt="Presto Workload Analyzer Logo" src="resources/Presto_Workload_Analyzer.png" width="50%" />
 </p>
 
-The Workload Analyzer collects Presto® and Trino workload statistics, and analyzes them. The analysis [report](https://varada.io/wa-sample-report/) provides improved visibility into your analytical workloads, and enables query optimization - to enhance cluster performance.
+The Workload Analyzer collects Presto® and Trino workload statistics, and analyzes them. The analysis provides improved visibility into your analytical workloads, and enables query optimization - to enhance cluster performance.
 
 The Presto® Workload Analyzer collects, and stores, [QueryInfo](https://github.com/trinodb/trino/blob/master/core/trino-main/src/main/java/io/trino/execution/QueryInfo.java) JSONs for queries executed while it is running, and any historical queries held in the Presto® Coordinator memory. 
 
@@ -12,7 +12,6 @@ The collection process has negligible compute-costs, and does not impact cluster
 Ensure that sufficient disk space is available in your working directory. Typically, a compressed JSON file size will be 50kb - 200kb.
 
 ## **Table of contents**
-- [Community](#Community)
 - [Features](#Features)
 - [Supported Versions of Presto](#Supported-Versions-of-Presto)
 - [Installation](#Installation)
@@ -20,9 +19,6 @@ Ensure that sufficient disk space is available in your working directory. Typica
 - [Screencasts](#Screencasts)
 - [Advanced Features](#Advanced-Features)
 - [Notes](#Notes)
-
-## Community
-Join us on [Slack](https://join.slack.com/t/workload-analyzer/shared_invite/zt-qcxpt3om-AXnjD~BjaXuVIoJfPQqHww)!
 
 ## Features 
 * Continuously collects and stores [QueryInfo](https://github.com/trinodb/trino/blob/master/core/trino-main/src/main/java/io/trino/execution/QueryInfo.java) JSONs, in the background without impacting query performance.
