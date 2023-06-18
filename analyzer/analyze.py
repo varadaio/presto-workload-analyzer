@@ -1012,7 +1012,7 @@ def iter_nodes(node):
         children = node["sources"]
     elif node_type == "join":
         children = [node["left"], node["right"]]
-    elif node_type in {"remotesource", "tablescan", "metadatadelete", "values", "tabledelete"}:
+    elif node_type in {"remotesource", "tablescan", "metadatadelete", "values", "tabledelete", "refreshmaterializedview"}:
         children = []
     else:
         try:
