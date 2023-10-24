@@ -19,9 +19,10 @@
 import argparse
 import gzip
 import json
-import logbook
 import pathlib
 import sys
+
+import logbook
 import tqdm
 
 logbook.StreamHandler(sys.stderr).push_application()
@@ -169,13 +170,7 @@ def summary(j: dict):
         log.warning("missing key for {}", stats)
 
 
-def main():
-    p = argparse.ArgumentParser()
-    p.add_argument("-i", "--input-dir", type=pathlib.Path)
-    p.add_argument("-l", "--limit", type=int)
-    p.add_argument("-q", "--quiet", action="store_true", default=False)
-    args = p.parse_args()
-
+def extract(args):
     paths = [
         p for pattern in ["*.json", "*.json.gz"] for p in args.input_dir.glob(pattern)
     ]
@@ -211,6 +206,21 @@ def main():
         output.name,
         compressed_file.stat().st_size / 1e6,
     )
+
+
+def get_args_parser():
+    p = argparse.ArgumentParser()
+
+    group = p.add_argument_group('extract')
+    group.add_argument("-i", "--input-dir", type=pathlib.Path)
+    group.add_argument("-l", "--limit", type=int)
+    group.add_argument("-q", "--quiet", action="store_true", default=False)
+
+    return p
+
+
+def main():
+    extract(get_args_parser().parse_args())
 
 
 if __name__ == "__main__":
