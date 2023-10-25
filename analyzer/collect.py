@@ -24,6 +24,7 @@ import time
 import logbook
 import requests
 from requests.auth import HTTPBasicAuth
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 logbook.StreamHandler(sys.stderr).push_application()
 log = logbook.Logger("collect")
@@ -78,6 +79,7 @@ def main():
     p.add_argument("--username-request-header")
     p.add_argument("-p", "--password")
     p.add_argument("--certificate-verification", default=True, type=str_to_bool)
+    p.add_argument("--disbale_insecure_warning", default=False, type=str_to_bool)
     p.add_argument("-o", "--output-dir", default="JSONs", type=pathlib.Path)
     p.add_argument("-d", "--delay", default=0.1, type=float)
     p.add_argument("--loop", default=False, action="store_true")
@@ -86,6 +88,9 @@ def main():
     client = Client(args.username, args.password, args.certificate_verification, args.username_request_header)
     endpoint = "{}{}".format(args.coordinator, args.query_endpoint)
     args.output_dir.mkdir(parents=True, exist_ok=True)
+
+    if not client._certificate_verification and args.disbale_insecure_warning:
+        requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
     done_state = {"FINISHED", "FAILED"}
     while True:
